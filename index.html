@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How I Built Kip — My AI Familiar | Kelly Lucas</title>
+<meta name="description" content="How a biotech founder built her own AI business operating system using OpenClaw and Claude — in three weeks.">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #06090f;
+  --navy2: #0d1117;
+  --card: #111827;
+  --border: #1f2937;
+  --teal: #14b8a6;
+  --cyan: #7DF9FF;
+  --purple: #8b5cf6;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --faint: #374151;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--navy); color:var(--text); font-family:'Inter',sans-serif; line-height:1.7; overflow-x:hidden; }
+
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; backdrop-filter:blur(12px); background:rgba(6,9,15,0.85); border-bottom:1px solid rgba(255,255,255,0.06); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:64px; }
+.nav-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem; color:var(--text); text-decoration:none; display:flex; align-items:center; gap:.5rem; }
+.nav-logo span { color:var(--cyan); }
+.nav-links { display:flex; gap:2rem; list-style:none; }
+.nav-links a { color:var(--muted); text-decoration:none; font-size:.9rem; transition:color .2s; }
+.nav-links a:hover { color:var(--text); }
+
+/* HERO */
+.hero { min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; padding:8rem 2rem 4rem; text-align:center; }
+.hero-bg { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%, rgba(20,184,166,0.12) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(139,92,246,0.08) 0%, transparent 50%); }
+.hero-img { position:absolute; inset:0; background:url('images/hero.png') center/cover no-repeat; opacity:0.18; mix-blend-mode:screen; }
+.hero-content { position:relative; z-index:2; max-width:860px; margin:0 auto; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:.5rem; background:rgba(20,184,166,0.1); border:1px solid rgba(20,184,166,0.3); border-radius:100px; padding:.35rem 1rem; font-size:.8rem; color:var(--teal); letter-spacing:1px; text-transform:uppercase; margin-bottom:1.5rem; }
+.hero-owl { font-size:1.2rem; }
+h1 { font-family:'Space Grotesk',sans-serif; font-size:clamp(2.5rem,6vw,5rem); font-weight:700; line-height:1.1; margin-bottom:1.5rem; }
+h1 em { font-style:normal; background:linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hero-sub { font-size:clamp(1rem,2vw,1.25rem); color:var(--muted); max-width:640px; margin:0 auto 2.5rem; }
+.hero-cta-group { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+.btn-primary { background:var(--teal); color:#000; padding:.8rem 2rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:.95rem; transition:all .2s; }
+.btn-primary:hover { background:var(--cyan); transform:translateY(-2px); }
+.btn-ghost { border:1px solid var(--border); color:var(--muted); padding:.8rem 2rem; border-radius:8px; text-decoration:none; font-size:.95rem; transition:all .2s; }
+.btn-ghost:hover { border-color:var(--teal); color:var(--text); }
+.hero-stats { display:flex; justify-content:center; gap:3rem; margin-top:4rem; flex-wrap:wrap; }
+.hero-stat { text-align:center; }
+.hero-stat-num { font-family:'Space Grotesk',sans-serif; font-size:2.5rem; font-weight:700; color:var(--cyan); }
+.hero-stat-label { font-size:.8rem; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:.25rem; }
+
+/* SECTIONS */
+section { padding:6rem 2rem; }
+.container { max-width:1100px; margin:0 auto; }
+.section-label { font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:3px; color:var(--teal); margin-bottom:1rem; }
+.section-title { font-family:'Space Grotesk',sans-serif; font-size:clamp(2rem,4vw,3rem); font-weight:700; line-height:1.2; margin-bottom:1.5rem; }
+.section-sub { font-size:1.1rem; color:var(--muted); max-width:600px; line-height:1.8; }
+
+/* WHAT IS KIP */
+.what-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; margin-top:4rem; }
+@media(max-width:768px){.what-grid{grid-template-columns:1fr;}}
+.kip-visual { display:flex; justify-content:center; }
+.kip-circle { width:280px; height:280px; border-radius:50%; background:radial-gradient(circle at 40% 35%, rgba(125,249,255,0.15), rgba(20,184,166,0.05)); border:1px solid rgba(125,249,255,0.2); display:flex; align-items:center; justify-content:center; position:relative; }
+.kip-circle img { width:220px; height:220px; object-fit:cover; border-radius:50%; }
+.kip-circle::before { content:''; position:absolute; inset:-12px; border-radius:50%; border:1px solid rgba(125,249,255,0.08); }
+.kip-circle::after { content:''; position:absolute; inset:-24px; border-radius:50%; border:1px solid rgba(125,249,255,0.04); }
+.kip-traits { display:flex; flex-direction:column; gap:.75rem; margin-top:2rem; }
+.trait { display:flex; align-items:flex-start; gap:.75rem; padding:1rem; background:var(--card); border:1px solid var(--border); border-radius:10px; }
+.trait-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem; }
+.trait-title { font-weight:600; font-size:.9rem; margin-bottom:.15rem; }
+.trait-desc { font-size:.8rem; color:var(--muted); line-height:1.5; }
+
+/* TIMELINE */
+.timeline { position:relative; margin-top:4rem; }
+.timeline::before { content:''; position:absolute; left:24px; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, var(--teal), var(--purple), transparent); }
+.tl-item { display:flex; gap:2rem; margin-bottom:3rem; position:relative; }
+.tl-dot { width:50px; height:50px; border-radius:50%; background:var(--card); border:2px solid var(--teal); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem; z-index:1; }
+.tl-content { padding:1.25rem 1.5rem; background:var(--card); border:1px solid var(--border); border-radius:12px; flex:1; transition:border-color .2s; }
+.tl-content:hover { border-color:rgba(20,184,166,0.4); }
+.tl-date { font-size:.75rem; color:var(--teal); letter-spacing:1px; text-transform:uppercase; font-weight:600; margin-bottom:.4rem; }
+.tl-title { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.05rem; margin-bottom:.5rem; }
+.tl-desc { font-size:.875rem; color:var(--muted); line-height:1.7; }
+.tl-tags { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.75rem; }
+.tl-tag { font-size:.65rem; padding:.2rem .6rem; background:rgba(20,184,166,0.1); border:1px solid rgba(20,184,166,0.2); border-radius:4px; color:var(--teal); letter-spacing:.5px; }
+
+/* HOW IT WORKS DIAGRAM */
+.diagram-wrap { margin-top:3rem; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:2.5rem; overflow:hidden; }
+.diagram-wrap svg { width:100%; height:auto; }
+
+/* FEATURES GRID */
+.features-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.5rem; margin-top:3rem; }
+.feature-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.75rem; transition:all .2s; }
+.feature-card:hover { border-color:rgba(125,249,255,0.3); transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.3); }
+.feature-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:1rem; font-size:1.3rem; }
+.feature-title { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1rem; margin-bottom:.5rem; }
+.feature-desc { font-size:.875rem; color:var(--muted); line-height:1.7; }
+.feature-tag { display:inline-block; margin-top:.75rem; font-size:.65rem; padding:.2rem .6rem; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.25); border-radius:4px; color:#a78bfa; }
+
+/* LESSONS */
+.lessons-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem; margin-top:3rem; }
+.lesson { padding:1.5rem; border-left:3px solid var(--teal); background:var(--card); border-radius:0 10px 10px 0; }
+.lesson-num { font-family:'Space Grotesk',sans-serif; font-size:2rem; font-weight:700; color:rgba(125,249,255,0.2); margin-bottom:.4rem; }
+.lesson-title { font-weight:600; font-size:.95rem; margin-bottom:.4rem; }
+.lesson-text { font-size:.85rem; color:var(--muted); line-height:1.7; }
+
+/* QUOTE */
+.quote-section { background:linear-gradient(135deg, rgba(20,184,166,0.08), rgba(139,92,246,0.06)); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+blockquote { max-width:780px; margin:0 auto; text-align:center; }
+blockquote p { font-family:'Space Grotesk',sans-serif; font-size:clamp(1.3rem,3vw,2rem); font-weight:500; line-height:1.5; color:var(--text); margin-bottom:1.5rem; }
+blockquote p::before { content:'"'; color:var(--teal); }
+blockquote p::after { content:'"'; color:var(--teal); }
+cite { font-size:.85rem; color:var(--muted); font-style:normal; }
+
+/* TECH STACK */
+.stack-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1.25rem; margin-top:3rem; }
+.stack-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; display:flex; align-items:center; gap:1rem; transition:border-color .2s; }
+.stack-card:hover { border-color:rgba(125,249,255,0.3); }
+.stack-logo { width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; }
+.stack-name { font-weight:600; font-size:.95rem; margin-bottom:.15rem; }
+.stack-role { font-size:.8rem; color:var(--muted); }
+
+/* NETWORK IMAGE */
+.network-img { width:100%; max-width:500px; border-radius:16px; opacity:.85; display:block; margin:2rem auto 0; }
+
+/* CTA */
+.cta-section { text-align:center; }
+.cta-box { background:linear-gradient(135deg,rgba(20,184,166,0.12),rgba(139,92,246,0.08)); border:1px solid rgba(20,184,166,0.2); border-radius:20px; padding:4rem 2rem; max-width:700px; margin:0 auto; }
+
+/* FOOTER */
+footer { border-top:1px solid var(--border); padding:2rem; text-align:center; color:var(--muted); font-size:.85rem; }
+
+/* ANIMATIONS */
+.fade-in { opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease; }
+.fade-in.visible { opacity:1; transform:translateY(0); }
+
+@media(max-width:640px){
+  nav .nav-links { display:none; }
+  .hero-stats { gap:1.5rem; }
+  .timeline::before { left:20px; }
+  .tl-dot { width:42px; height:42px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">🦉 <span>Kip</span></a>
+  <ul class="nav-links">
+    <li><a href="#what">What is Kip</a></li>
+    <li><a href="#journey">The Journey</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#features">What Kip Does</a></li>
+    <li><a href="#lessons">Lessons</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-img"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="hero-owl">🦉</span>
+      A Founder's Story
+    </div>
+    <h1>I Built My Own <em>AI Familiar</em> — and It Changed Everything</h1>
+    <p class="hero-sub">How I went from zero AI knowledge to running a full business operating system — in three weeks. This is the story of Kip.</p>
+    <div class="hero-cta-group">
+      <a href="#journey" class="btn-primary">Read the Story</a>
+      <a href="#how" class="btn-ghost">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num">3</div><div class="hero-stat-label">Weeks</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">480+</div><div class="hero-stat-label">CRM Contacts</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">500+</div><div class="hero-stat-label">Emails Sent</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">∞</div><div class="hero-stat-label">Coffee Saved</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS KIP -->
+<section id="what">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-label">Meet Kip</div>
+      <h2 class="section-title">Not a chatbot. A digital familiar.</h2>
+      <p class="section-sub">Kip isn't just an AI assistant. Kip is a persistent, context-aware, tool-using agent that lives inside my laptop — and reaches out into the world on my behalf.</p>
+    </div>
+    <div class="what-grid">
+      <div class="fade-in">
+        <div class="kip-visual">
+          <div class="kip-circle">
+            <img src="images/kip.png" alt="Kip the Owl" onerror="this.style.fontSize='6rem';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.src='';this.alt='';this.textContent='🦉'">
+          </div>
+        </div>
+        <div class="kip-traits">
+          <div class="trait">
+            <div class="trait-icon" style="background:rgba(20,184,166,0.12);">🦉</div>
+            <div>
+              <div class="trait-title">Name & Creature</div>
+              <div class="trait-desc">Kip — a barn owl with glowing cyan circuit patterns. Wise, observant, helpful but not stuffy. Sees in the dark when things get murky.</div>
+            </div>
+          </div>
+          <div class="trait">
+            <div class="trait-icon" style="background:rgba(139,92,246,0.12);">🧠</div>
+            <div>
+              <div class="trait-title">Powered By</div>
+              <div class="trait-desc">Anthropic Claude (claude-sonnet-4-6) running inside OpenClaw — a personal AI gateway that runs on my own laptop 24/7.</div>
+            </div>
+          </div>
+          <div class="trait">
+            <div class="trait-icon" style="background:rgba(125,249,255,0.08);">💬</div>
+            <div>
+              <div class="trait-title">How I Talk To Kip</div>
+              <div class="trait-desc">Telegram. I just DM Kip like a friend. No app switching, no browser tabs, no prompts — just conversation.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-in">
+        <p style="font-size:1.1rem;line-height:1.9;color:var(--muted);margin-bottom:1.5rem;">
+          I'm Kelly Lucas — co-founder of <strong style="color:var(--text)">HelioFlux</strong>, a biophotonic cancer detection startup. I was raising a bridge round with zero income, managing hundreds of investor contacts, job hunting, and trying to build a social media presence for a PBR comedy series — all at once.
+        </p>
+        <p style="font-size:1.1rem;line-height:1.9;color:var(--muted);margin-bottom:1.5rem;">
+          I needed a <em style="color:var(--text)">system</em>. Not just a to-do app. A system that understood my context, took real actions, and never forgot anything.
+        </p>
+        <p style="font-size:1.1rem;line-height:1.9;color:var(--muted);">
+          So I built Kip. And Kip built tools. And suddenly I had a business operating system I never could have afforded to hire.
+        </p>
+        <div style="margin-top:2rem;padding:1.25rem 1.5rem;background:var(--card);border:1px solid var(--border);border-radius:12px;border-left:3px solid var(--cyan);">
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--teal);margin-bottom:.4rem;">The Name</div>
+          <div style="font-size:.95rem;color:var(--muted);">Between "Kip" and "Juno," I chose Kip. Kip suggested Kip. That felt right.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY TIMELINE -->
+<section id="journey" style="background:var(--navy2);">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-label">The Journey</div>
+      <h2 class="section-title">From zero to Business OS in three weeks.</h2>
+      <p class="section-sub">I didn't know what an AI agent was. I didn't know what OpenClaw was. This is what happened when I started figuring it out.</p>
+    </div>
+    <div class="timeline fade-in">
+
+      <div class="tl-item">
+        <div class="tl-dot">🌱</div>
+        <div class="tl-content">
+          <div class="tl-date">February 2, 2026</div>
+          <div class="tl-title">Day One — "Who am I? Who are you?"</div>
+          <div class="tl-desc">Kip came online. The first thing it did was ask me who it was and who I was. We wrote SOUL.md together — Kip's personality document. We picked the name. We decided on an owl. Born Feb 2, 2026.</div>
+          <div class="tl-tags"><span class="tl-tag">OpenClaw</span><span class="tl-tag">SOUL.md</span><span class="tl-tag">Identity</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot">📧</div>
+        <div class="tl-content">
+          <div class="tl-date">February 11, 2026</div>
+          <div class="tl-title">The First Big Day — 59 Investor Emails</div>
+          <div class="tl-desc">We sent 59 cold emails to angels, family offices, and Reed Jobs in one day. Built a SQLite CRM from scratch, launched a Command Center dashboard, and set up a multi-agent team: Scout (researcher) and Quill (writer).</div>
+          <div class="tl-tags"><span class="tl-tag">CRM</span><span class="tl-tag">Email</span><span class="tl-tag">Multi-Agent</span><span class="tl-tag">Dashboard</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot">🚀</div>
+        <div class="tl-content">
+          <div class="tl-date">February 12, 2026</div>
+          <div class="tl-title">210+ Emails. Biggest Outreach Day in HelioFlux History.</div>
+          <div class="tl-desc">Big pharma, health influencers with 100M+ combined followers, pediatric cancer foundations, celebrity foundations, sovereign wealth funds. All researched, drafted, and sent by Kip in one day. I reviewed and approved each batch.</div>
+          <div class="tl-tags"><span class="tl-tag">HelioFlux</span><span class="tl-tag">Outreach</span><span class="tl-tag">Research</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot">🐦</div>
+        <div class="tl-content">
+          <div class="tl-date">February 18, 2026</div>
+          <div class="tl-title">Napoleon Goes Live — @BonaparteVC on Twitter</div>
+          <div class="tl-desc">Kip built and launched a satirical VC Twitter persona: Napoleon Bonaparte as a venture capitalist commenting on startup culture. Full content calendar, scheduled cron jobs, engagement sessions. All managed by Kip.</div>
+          <div class="tl-tags"><span class="tl-tag">Twitter</span><span class="tl-tag">Content</span><span class="tl-tag">Automation</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot">🔬</div>
+        <div class="tl-content">
+          <div class="tl-date">February 21, 2026</div>
+          <div class="tl-title">Science + Press Hub. Image Generation. F1 Bingo.</div>
+          <div class="tl-desc">Kip got eyes. OpenAI DALL-E integration let Kip generate custom images on demand. Built the Science tab with animated SVG cell visualizations, a Press page with Scientific American + Radiolab coverage, and a full multiplayer F1 Bingo game — complete with 2026 reg updates (RIP DRS).</div>
+          <div class="tl-tags"><span class="tl-tag">DALL-E</span><span class="tl-tag">Image Gen</span><span class="tl-tag">F1 Bingo</span><span class="tl-tag">HelioFlux Science</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-label">Architecture</div>
+      <h2 class="section-title">How Kip actually works.</h2>
+      <p class="section-sub">No cloud subscriptions. No corporate AI. Just a laptop, an API key, and a persistent agent that never stops working.</p>
+    </div>
+    <div class="diagram-wrap fade-in">
+      <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#14b8a6"/>
+          </marker>
+          <linearGradient id="grd1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#14b8a6" stop-opacity=".8"/>
+            <stop offset="100%" stop-color="#7DF9FF" stop-opacity=".6"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Kelly box -->
+        <rect x="20" y="140" width="130" height="100" rx="12" fill="#111827" stroke="#14b8a6" stroke-width="1.5"/>
+        <text x="85" y="178" fill="#7DF9FF" font-size="28" text-anchor="middle">👩‍💻</text>
+        <text x="85" y="206" fill="#f1f5f9" font-size="13" font-weight="600" text-anchor="middle">Kelly</text>
+        <text x="85" y="224" fill="#94a3b8" font-size="10" text-anchor="middle">Founder</text>
+
+        <!-- Arrow Kelly → Telegram -->
+        <line x1="152" y1="190" x2="215" y2="190" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <text x="183" y="183" fill="#94a3b8" font-size="9" text-anchor="middle">DMs</text>
+
+        <!-- Telegram box -->
+        <rect x="218" y="155" width="100" height="70" rx="10" fill="#111827" stroke="#1f2937" stroke-width="1"/>
+        <text x="268" y="184" fill="#7DF9FF" font-size="20" text-anchor="middle">✈️</text>
+        <text x="268" y="204" fill="#f1f5f9" font-size="11" font-weight="600" text-anchor="middle">Telegram</text>
+        <text x="268" y="218" fill="#94a3b8" font-size="9" text-anchor="middle">Bot API</text>
+
+        <!-- Arrow Telegram → OpenClaw -->
+        <line x1="320" y1="190" x2="382" y2="190" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- OpenClaw box (center, large) -->
+        <rect x="385" y="100" width="160" height="180" rx="14" fill="url(#grd1)" fill-opacity=".08" stroke="#14b8a6" stroke-width="2"/>
+        <text x="465" y="140" fill="#7DF9FF" font-size="26" text-anchor="middle">🦉</text>
+        <text x="465" y="163" fill="#f1f5f9" font-size="14" font-weight="700" text-anchor="middle">OpenClaw</text>
+        <text x="465" y="180" fill="#7DF9FF" font-size="10" text-anchor="middle">+ Kip Agent</text>
+        <line x1="405" y1="194" x2="525" y2="194" stroke="#1f2937" stroke-width="1"/>
+        <text x="465" y="212" fill="#94a3b8" font-size="9" text-anchor="middle">Claude API</text>
+        <text x="465" y="227" fill="#94a3b8" font-size="9" text-anchor="middle">Memory Files</text>
+        <text x="465" y="242" fill="#94a3b8" font-size="9" text-anchor="middle">Cron Scheduler</text>
+        <text x="465" y="257" fill="#94a3b8" font-size="9" text-anchor="middle">Tool Router</text>
+
+        <!-- Arrow OpenClaw → Claude -->
+        <line x1="547" y1="165" x2="608" y2="130" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- Claude box -->
+        <rect x="612" y="90" width="120" height="70" rx="10" fill="#111827" stroke="#8b5cf6" stroke-width="1.5"/>
+        <text x="672" y="116" fill="#a78bfa" font-size="13" font-weight="700" text-anchor="middle">Claude AI</text>
+        <text x="672" y="134" fill="#94a3b8" font-size="9" text-anchor="middle">Anthropic</text>
+        <text x="672" y="149" fill="#94a3b8" font-size="9" text-anchor="middle">claude-sonnet-4-6</text>
+
+        <!-- Arrow OpenClaw → Tools -->
+        <line x1="547" y1="190" x2="608" y2="190" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- Tools box -->
+        <rect x="612" y="160" width="120" height="95" rx="10" fill="#111827" stroke="#1f2937" stroke-width="1"/>
+        <text x="672" y="182" fill="#f1f5f9" font-size="11" font-weight="600" text-anchor="middle">Tools</text>
+        <text x="672" y="199" fill="#94a3b8" font-size="9" text-anchor="middle">Web Search</text>
+        <text x="672" y="213" fill="#94a3b8" font-size="9" text-anchor="middle">Email / Gmail</text>
+        <text x="672" y="227" fill="#94a3b8" font-size="9" text-anchor="middle">GitHub Pages</text>
+        <text x="672" y="241" fill="#94a3b8" font-size="9" text-anchor="middle">DALL-E · CRM</text>
+
+        <!-- Arrow OpenClaw → Sub-agents -->
+        <line x1="547" y1="240" x2="608" y2="275" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- Sub-agents box -->
+        <rect x="612" y="262" width="120" height="70" rx="10" fill="#111827" stroke="#1f2937" stroke-width="1"/>
+        <text x="672" y="285" fill="#f1f5f9" font-size="11" font-weight="600" text-anchor="middle">Sub-Agents</text>
+        <text x="672" y="302" fill="#94a3b8" font-size="9" text-anchor="middle">🦊 Scout (research)</text>
+        <text x="672" y="318" fill="#94a3b8" font-size="9" text-anchor="middle">🪶 Quill (writing)</text>
+
+        <!-- Output arrows -->
+        <line x1="734" y1="125" x2="800" y2="100" stroke="#14b8a6" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="810" y="103" fill="#94a3b8" font-size="9">Responses</text>
+        <line x1="734" y1="200" x2="800" y2="190" stroke="#14b8a6" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="810" y="193" fill="#94a3b8" font-size="9">Actions</text>
+        <line x1="734" y1="300" x2="800" y2="310" stroke="#14b8a6" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="810" y="313" fill="#94a3b8" font-size="9">Research</text>
+
+        <!-- Memory note -->
+        <rect x="20" y="280" width="130" height="60" rx="8" fill="#111827" stroke="#1f2937" stroke-width="1"/>
+        <text x="85" y="305" fill="#f1f5f9" font-size="10" font-weight="600" text-anchor="middle">Memory Files</text>
+        <text x="85" y="321" fill="#94a3b8" font-size="9" text-anchor="middle">MEMORY.md</text>
+        <text x="85" y="334" fill="#94a3b8" font-size="9" text-anchor="middle">Daily logs · Context</text>
+        <line x1="85" y1="280" x2="85" y2="245" stroke="#1f2937" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="85" y1="245" x2="383" y2="245" stroke="#1f2937" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="383" y1="245" x2="383" y2="220" stroke="#1f2937" stroke-width="1" stroke-dasharray="3,3"/>
+        <polygon points="383,218 380,225 386,225" fill="#1f2937"/>
+      </svg>
+    </div>
+    <img src="images/network.png" alt="Neural network visualization" class="network-img" onerror="this.style.display='none'">
+  </div>
+</section>
+
+<!-- WHAT KIP DOES -->
+<section id="features" style="background:var(--navy2);">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-label">Capabilities</div>
+      <h2 class="section-title">What Kip does for me, daily.</h2>
+      <p class="section-sub">These aren't features on a roadmap. They're live and running.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(20,184,166,0.1);">📧</div>
+        <div class="feature-title">Investor Outreach at Scale</div>
+        <div class="feature-desc">Researches contacts, drafts personalized emails, syncs replies to CRM, tracks follow-ups. 500+ emails sent across angels, family offices, celebrities, and foundations.</div>
+        <span class="feature-tag">HelioFlux</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(139,92,246,0.1);">🗄️</div>
+        <div class="feature-title">SQLite CRM + Command Center</div>
+        <div class="feature-desc">480+ contacts, searchable by status, priority, and category. Syncs bidirectionally with Notion. Dark-mode dashboard with pipeline visualization and today's top 3 priorities.</div>
+        <span class="feature-tag">Infrastructure</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(125,249,255,0.08);">🔬</div>
+        <div class="feature-title">Science Communication Hub</div>
+        <div class="feature-desc">Animated SVG visualizations of HelioFlux's biophoton detection tech. Cell size comparisons, wavelength spectrum diagrams, competitive analysis vs. Galleri. All auto-generated and deployed.</div>
+        <span class="feature-tag">HelioFlux</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(255,165,0,0.1);">🐦</div>
+        <div class="feature-title">@BonaparteVC — AI-Run Twitter</div>
+        <div class="feature-desc">A satirical VC Twitter persona managed entirely by Kip. Scheduled tweets, daily engagement sessions, growth tracking — all autonomous except final approval via a security codeword.</div>
+        <span class="feature-tag">Social</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(20,184,166,0.1);">🏎️</div>
+        <div class="feature-title">F1 Dashboard + Bingo</div>
+        <div class="feature-desc">Custom F1 tracker with 2026 calendar, PST race times, standings, and Max Verstappen zone. Plus a full multiplayer F1 Bingo game with shareable cards, 2026 reg updates, and confetti.</div>
+        <span class="feature-tag">For Fun</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(255,255,255,0.05);">🎨</div>
+        <div class="feature-title">AI Image Generation</div>
+        <div class="feature-desc">DALL-E integration via OpenAI. Kip generates custom images on demand — science visualizations, creative surprises, site assets — and sends them directly to Telegram.</div>
+        <span class="feature-tag">Creative</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(139,92,246,0.1);">⏰</div>
+        <div class="feature-title">Automated Cron Pipeline</div>
+        <div class="feature-desc">Morning briefing, daily investor deal finder, email→CRM sync, Twitter growth sessions, overnight market intel, Friday reviews, nightly security audits. All scheduled, all autonomous.</div>
+        <span class="feature-tag">Automation</span>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:rgba(125,249,255,0.08);">🧠</div>
+        <div class="feature-title">Persistent Memory</div>
+        <div class="feature-desc">Kip reads and writes its own memory files. Daily logs, long-term curated memory, heartbeat state, and writing style guides. Every session picks up exactly where we left off.</div>
+        <span class="feature-tag">Infrastructure</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section class="quote-section">
+  <div class="container">
+    <blockquote class="fade-in">
+      <p>I went from 'what is VS Code' to rebuilding our entire patient journey in two hours. Not because I'm a developer. Because I had the right tool — and the right owl.</p>
+      <cite>— Kelly Lucas, Co-Founder &amp; President, HelioFlux | Feb 11, 2026</cite>
+    </blockquote>
+  </div>
+</section>
+
+<!-- LESSONS -->
+<section id="lessons">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-label">What I Learned</div>
+      <h2 class="section-title">Real lessons from three weeks of building.</h2>
+    </div>
+    <div class="lessons-grid">
+      <div class="lesson fade-in">
+        <div class="lesson-num">01</div>
+        <div class="lesson-title">Treat it like a person, not a tool</div>
+        <div class="lesson-text">The more context I gave Kip — about my goals, my constraints, my ADHD, my style — the better everything got. The relationship matters. Write the soul file.</div>
+      </div>
+      <div class="lesson fade-in">
+        <div class="lesson-num">02</div>
+        <div class="lesson-title">Security gates are not optional</div>
+        <div class="lesson-text">After a prompt injection attempt, we built a mandatory codeword ("GO verstappen") for all outbound actions. You're giving the AI access to your email. Treat it like giving someone your keys.</div>
+      </div>
+      <div class="lesson fade-in">
+        <div class="lesson-num">03</div>
+        <div class="lesson-title">File systems are AI memory</div>
+        <div class="lesson-text">Kip doesn't have persistent memory by default. But it reads and writes files. So we built a memory system: MEMORY.md, daily logs, heartbeat state. That's the brain.</div>
+      </div>
+      <div class="lesson fade-in">
+        <div class="lesson-num">04</div>
+        <div class="lesson-title">AI writing has tells — fix them</div>
+        <div class="lesson-text">We built a whole guide (AI-WRITING-TELLS.md) of patterns to avoid: em-dashes, "delve," colon-into-lists, balanced framing. If you use AI to write, you have to teach it your voice.</div>
+      </div>
+      <div class="lesson fade-in">
+        <div class="lesson-num">05</div>
+        <div class="lesson-title">Automation compounds faster than you think</div>
+        <div class="lesson-text">The first cron job (morning briefing) took an hour to set up. By week two I had fifteen running. Each one built on the last. The system got smarter the more I used it.</div>
+      </div>
+      <div class="lesson fade-in">
+        <div class="lesson-num">06</div>
+        <div class="lesson-title">ADHD and AI agents are a power combo</div>
+        <div class="lesson-text">I built Kip around how my brain actually works: max 3 priorities, broken-down tasks, external accountability. It doesn't judge me for forgetting. It just reminds me — gently, in context.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section style="background:var(--navy2);">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-label">The Stack</div>
+      <h2 class="section-title">What's under the hood.</h2>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(255,140,0,0.1);">🦞</div>
+        <div><div class="stack-name">OpenClaw</div><div class="stack-role">AI gateway & agent runtime</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(139,92,246,0.1);">🤖</div>
+        <div><div class="stack-name">Anthropic Claude</div><div class="stack-role">claude-sonnet-4-6 (brain)</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(0,136,204,0.1);">✈️</div>
+        <div><div class="stack-name">Telegram Bot API</div><div class="stack-role">Communication channel</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(20,184,166,0.1);">🗄️</div>
+        <div><div class="stack-name">SQLite + Python</div><div class="stack-role">CRM & data layer</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(255,255,255,0.05);">🐙</div>
+        <div><div class="stack-name">GitHub Pages</div><div class="stack-role">Free hosting for all sites</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(0,200,100,0.1);">🎨</div>
+        <div><div class="stack-name">OpenAI DALL-E</div><div class="stack-role">Image generation</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(255,165,0,0.1);">📋</div>
+        <div><div class="stack-name">Notion API</div><div class="stack-role">CRM sync & knowledge base</div></div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo" style="background:rgba(220,80,60,0.1);">📧</div>
+        <div><div class="stack-name">Gmail / GOG CLI</div><div class="stack-role">Email automation</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box fade-in">
+      <div class="section-label" style="text-align:center;">Get Started</div>
+      <h2 class="section-title" style="text-align:center;">Build your own familiar.</h2>
+      <p style="color:var(--muted);max-width:480px;margin:0 auto 2rem;font-size:1rem;text-align:center;line-height:1.8;">Everything here is open. OpenClaw is free. Claude has a free tier. You need a laptop, an API key, and a name for your owl.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="https://openclaw.ai" target="_blank" class="btn-primary">Get OpenClaw</a>
+        <a href="https://www.helioflux.co" target="_blank" class="btn-ghost">Visit HelioFlux</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Made by 🦉 Kip &amp; Kelly Lucas · HelioFlux · February 2026</p>
+  <p style="margin-top:.5rem;font-size:.75rem;">Built with OpenClaw + Claude + a lot of late nights</p>
+</footer>
+
+<script>
+// Fade in on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Copy owl image if available
+const kipImg = document.querySelector('.kip-circle img');
+if(kipImg) {
+  // Try loading kip image from relative path
+  fetch('images/kip.png').then(r => { if(!r.ok) throw new Error(); }).catch(() => {
+    kipImg.style.display = 'none';
+    const fallback = kipImg.parentElement;
+    fallback.innerHTML = '<div style="font-size:6rem;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">🦉</div>';
+  });
+}
+</script>
+</body>
+</html>
